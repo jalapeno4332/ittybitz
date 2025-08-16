@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, type ChangeEvent, type DragEvent, memo, useCallback } from "react";
+import { useState, useRef, type ChangeEvent, type DragEvent, memo, useCallback, useEffect } from "react";
 import {
   KeyRound,
   Lock,
@@ -31,6 +31,21 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 
 type Mode = "encrypt" | "decrypt";
 type InputType = "file" | "text";
+
+const validateAndSanitizeFile = (file: File) => {
+  if (file.name.includes('..') || 
+      file.name.includes('/') || 
+      file.name.includes('\\') ||
+      file.name.length > 255) {
+    throw new Error('Invalid filename. It may contain invalid characters or be too long.');
+  }
+  
+  if (file.name.includes('\0')) {
+    throw new Error('Invalid filename. It contains null bytes.');
+  }
+  
+  return true;
+};
 
 interface FileSelectorProps {
   id: string;
@@ -131,17 +146,32 @@ export function EncryptorTool() {
   const [file, setFile] = useState<File | null>(null);
   const [textSecret, setTextSecret] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showDecryptedText, setShowDecryptedText] = useState(false);
   const [useKeyFile, setUseKeyFile] = useState(false);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const [passwordIsStrong, setPasswordIsStrong] = useState(false);
+  const [isCryptoAvailable, setIsCryptoAvailable] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!window.crypto || !window.crypto.subtle || !window.crypto.getRandomValues) {
+      setIsCryptoAvailable(false);
+      toast({
+        title: "Security Warning",
+        description: "Web Crypto API is not available in this browser. This application cannot run securely.",
+        variant: "destructive",
+        duration: Infinity, // Keep it visible
+      });
+    }
+  }, [toast]);
 
   const resetState = useCallback(() => {
     setFile(null);
-    setPassword("");
+    if(passwordRef.current) passwordRef.current.value = "";
+    setPasswordIsStrong(false);
     setShowPassword(false);
     setUseKeyFile(false);
     setKeyFile(null);
@@ -173,8 +203,25 @@ export function EncryptorTool() {
         e.target.value = "";
       }
     }
+
+    if (!selectedFile) {
+        setter(null);
+        return;
+    }
+
+    try {
+      validateAndSanitizeFile(selectedFile);
+    } catch (error: any) {
+        toast({
+            title: "Invalid File",
+            description: error.message,
+            variant: "destructive",
+        });
+        setter(null);
+        return;
+    }
     
-    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
+    if (selectedFile.size > MAX_FILE_SIZE) {
       toast({
         title: "File Too Large",
         description: `Please select a file smaller than ${MAX_FILE_SIZE / 1024 / 1024}MB.`,
@@ -194,9 +241,15 @@ export function EncryptorTool() {
     const array = new Uint32Array(passwordLength);
     window.crypto.getRandomValues(array);
     for (let i = 0; i < passwordLength; i++) {
-      newPassword += charset.charAt(array[i] % charset.length);
+      const charIndex = array[i];
+      if (charIndex !== undefined) {
+        newPassword += charset.charAt(charIndex % charset.length);
+      }
     }
-    setPassword(newPassword);
+    if (passwordRef.current) {
+        passwordRef.current.value = newPassword;
+        handlePasswordChange(newPassword);
+    }
     toast({ title: "Password Generated", description: "A new secure password has been generated." });
   }, [toast]);
   
@@ -221,6 +274,8 @@ export function EncryptorTool() {
   };
 
   const processData = useCallback(async () => {
+    let mutablePassword = passwordRef.current?.value || "";
+
     const hasInput = inputType === 'file' ? !!file : !!textSecret;
     if (!hasInput) {
       toast({
@@ -230,7 +285,7 @@ export function EncryptorTool() {
       });
       return;
     }
-    if (!password) {
+    if (!mutablePassword) {
         toast({
           title: "Password Required",
           description: "Please provide a password.",
@@ -239,7 +294,7 @@ export function EncryptorTool() {
         return;
     }
     
-    if (mode === "encrypt" && !isPasswordStrong(password)) {
+    if (mode === "encrypt" && !checkIsPasswordStrong(mutablePassword)) {
         toast({
           title: "Weak Password",
           description: "Please use a password that is at least 24 characters and includes uppercase, lowercase, numbers, and symbols.",
@@ -251,9 +306,6 @@ export function EncryptorTool() {
     setIsLoading(true);
     setOutputText('');
     setShowDecryptedText(false);
-
-    // Create a mutable copy of the password to be cleared later
-    let mutablePassword = (' ' + password).slice(1);
 
     try {
       const keyFileBuffer = keyFile ? await keyFile.arrayBuffer() : null;
@@ -308,18 +360,23 @@ export function EncryptorTool() {
         description: `Your ${inputType} has been successfully ${mode === 'encrypt' ? 'encrypted' : 'decrypted'}.`,
       });
     } catch (error: any) {
-      toast({
-        title: "Processing Error",
-        description: error.message || "An unknown error occurred.",
-        variant: "destructive",
-      });
+        const safeMessage = (error.message?.toLowerCase().includes('decrypt') || error.message?.toLowerCase().includes('corrupted'))
+          ? 'Decryption failed. The password or key file may be incorrect, or the data may be corrupted.'
+          : error.message || 'An unknown error occurred.';
+
+        toast({
+            title: "Processing Error",
+            description: safeMessage,
+            variant: "destructive",
+        });
     } finally {
-      // Clear sensitive data from memory
-      mutablePassword = '';
-      setPassword(''); // Also clear the react state
+      // Clear sensitive data
+      mutablePassword = ''; 
+      if (passwordRef.current) passwordRef.current.value = "";
+      setPasswordIsStrong(false);
       setIsLoading(false);
     }
-  }, [file, mode, password, keyFile, toast, inputType, textSecret]);
+  }, [file, mode, keyFile, toast, inputType, textSecret]);
   
   const handleUseKeyFileChange = useCallback((checked: boolean) => {
       setUseKeyFile(checked);
@@ -328,7 +385,7 @@ export function EncryptorTool() {
       }
   }, []);
 
-  const isPasswordStrong = useCallback((pwd: string) => {
+  const checkIsPasswordStrong = useCallback((pwd: string) => {
     const hasUpperCase = /[A-Z]/.test(pwd);
     const hasLowerCase = /[a-z]/.test(pwd);
     const hasNumbers = /\d/.test(pwd);
@@ -337,24 +394,28 @@ export function EncryptorTool() {
     return hasMinLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
   }, []);
 
+  const handlePasswordChange = useCallback((pwd: string) => {
+    setPasswordIsStrong(checkIsPasswordStrong(pwd));
+  }, [checkIsPasswordStrong]);
+  
   const getPasswordStrengthColor = useCallback(() => {
-    if (!password) return "border-input";
-    if (isPasswordStrong(password)) return "border-success";
+    const pwd = passwordRef.current?.value || "";
+    if (!pwd) return "border-input";
+    if (checkIsPasswordStrong(pwd)) return "border-success";
     return "border-destructive";
-  }, [password, isPasswordStrong]);
+  }, [checkIsPasswordStrong]);
 
   const isProcessButtonDisabled = () => {
-    if (isLoading) return true;
+    if (isLoading || !isCryptoAvailable) return true;
     const hasInput = inputType === 'file' ? !!file : !!textSecret;
-    if (!hasInput) return true;
+    const hasPassword = !!passwordRef.current?.value;
+    if (!hasInput || !hasPassword) return true;
     
-    // Always require a strong password for encryption
-    if (mode === 'encrypt') {
-        return !isPasswordStrong(password);
+    if (mode === 'encrypt' && !passwordIsStrong) {
+        return true;
     }
     
-    // For decryption, only a password is required
-    return !password;
+    return false;
   }
 
   const renderContent = (currentMode: Mode) => (
@@ -399,9 +460,9 @@ export function EncryptorTool() {
             <div className="relative">
                  <Input
                     id="password"
+                    ref={passwordRef}
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     placeholder="Enter password..."
                     className={cn(
                       "pr-10 transition-colors duration-300",
@@ -413,8 +474,8 @@ export function EncryptorTool() {
                 </Button>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mt-2">
-                <Button variant="outline" size="sm" onClick={() => handleCopy(password)} disabled={!password}><Copy className="mr-1 h-3 w-3" />Copy</Button>
-                <Button variant="outline" size="sm" onClick={() => setPassword("")} disabled={!password}><X className="mr-1 h-3 w-3" />Clear</Button>
+                <Button variant="outline" size="sm" onClick={() => handleCopy(passwordRef.current?.value || '')} disabled={!passwordRef.current?.value}><Copy className="mr-1 h-3 w-3" />Copy</Button>
+                <Button variant="outline" size="sm" onClick={() => { if(passwordRef.current) { passwordRef.current.value = ""; handlePasswordChange("")} }} disabled={!passwordRef.current?.value}><X className="mr-1 h-3 w-3" />Clear</Button>
                 {currentMode === 'encrypt' && <Button variant="outline" size="sm" onClick={generatePassword}><RefreshCw className="mr-1 h-3 w-3" />Generate</Button>}
             </div>
         </div>
@@ -544,5 +605,3 @@ export function EncryptorTool() {
     </Card>
   );
 }
-
-    

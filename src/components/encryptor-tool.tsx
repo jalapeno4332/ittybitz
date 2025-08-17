@@ -334,7 +334,7 @@ export function EncryptorTool() {
 
         if (inputType === 'file') {
             const blob = new Blob([resultBuffer]);
-            triggerDownload(blob, `${file!.name}.ibitz`);
+            triggerDownload(blob, `${file!.name}.ibtz`);
             setFile(null);
         } else {
             const base64String = btoa(String.fromCharCode(...new Uint8Array(resultBuffer)));
@@ -359,8 +359,8 @@ export function EncryptorTool() {
         resultBuffer = await decryptFile(inputBuffer, mutablePassword, keyFileBuffer);
         
         if (inputType === 'file') {
-             const resultFilename = file!.name.endsWith('.ibitz')
-              ? file!.name.slice(0, -'.ibitz'.length)
+             const resultFilename = file!.name.endsWith('.ibtz')
+              ? file!.name.slice(0, -'.ibtz'.length)
               : `decrypted-${file!.name}`;
             const blob = new Blob([resultBuffer]);
             triggerDownload(blob, resultFilename);

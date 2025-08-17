@@ -554,7 +554,7 @@ export function EncryptorTool() {
           Secure by design. Simple by nature.
         </CardDescription>
         <p className="text-sm text-muted-foreground pt-2">
-          Secure client-side file and text encryption and decryption.
+          Secure, <a href="https://github.com/jalapeno4332/ittybitz" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">open-source</a>, client-side encryption and decryption.
         </p>
       </CardHeader>
       <CardContent>

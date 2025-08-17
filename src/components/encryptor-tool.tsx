@@ -114,10 +114,12 @@ const FileSelector = memo(({
         onKeyDown={(e) => e.key === "Enter" && handleContainerClick()}
       >
         <div className="mb-2 text-primary">{icon}</div>
-        <h3 className="text-md font-semibold text-foreground">{label}</h3>
-        <p className={cn("mt-1 text-sm truncate", selectedFile ? "text-accent font-semibold" : "text-muted-foreground")}>
-          {selectedFile ? selectedFile.name : description}
-        </p>
+        <div className="w-full overflow-hidden">
+          <h3 className="text-md font-semibold text-foreground">{label}</h3>
+          <p className={cn("mt-1 text-sm truncate", selectedFile ? "text-accent font-semibold" : "text-muted-foreground")}>
+            {selectedFile ? selectedFile.name : description}
+          </p>
+        </div>
       </div>
        {selectedFile && (
         <div className="text-right">
@@ -233,6 +235,19 @@ export function EncryptorTool() {
 
     setter(selectedFile);
   }, [toast]);
+  
+  const checkIsPasswordStrong = useCallback((pwd: string) => {
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasNumbers = /\d/.test(pwd);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    const hasMinLength = pwd.length >= 24;
+    return hasMinLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
+  }, []);
+
+  const handlePasswordChange = useCallback((pwd: string) => {
+    setPasswordIsStrong(checkIsPasswordStrong(pwd));
+  }, [checkIsPasswordStrong]);
 
   const generatePassword = useCallback(() => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
@@ -251,8 +266,8 @@ export function EncryptorTool() {
         handlePasswordChange(newPassword);
     }
     toast({ title: "Password Generated", description: "A new secure password has been generated." });
-  }, [toast]);
-  
+  }, [toast, handlePasswordChange]);
+
   const handleCopy = useCallback((textToCopy: string) => {
     if (!textToCopy) return;
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -319,7 +334,7 @@ export function EncryptorTool() {
 
         if (inputType === 'file') {
             const blob = new Blob([resultBuffer]);
-            triggerDownload(blob, `${file!.name}.ib`);
+            triggerDownload(blob, `${file!.name}.ibitz`);
             setFile(null);
         } else {
             const base64String = btoa(String.fromCharCode(...new Uint8Array(resultBuffer)));
@@ -344,8 +359,8 @@ export function EncryptorTool() {
         resultBuffer = await decryptFile(inputBuffer, mutablePassword, keyFileBuffer);
         
         if (inputType === 'file') {
-             const resultFilename = file!.name.endsWith('.ib')
-              ? file!.name.slice(0, -'.ib'.length)
+             const resultFilename = file!.name.endsWith('.ibitz')
+              ? file!.name.slice(0, -'.ibitz'.length)
               : `decrypted-${file!.name}`;
             const blob = new Blob([resultBuffer]);
             triggerDownload(blob, resultFilename);
@@ -376,7 +391,7 @@ export function EncryptorTool() {
       setPasswordIsStrong(false);
       setIsLoading(false);
     }
-  }, [file, mode, keyFile, toast, inputType, textSecret]);
+  }, [file, mode, keyFile, toast, inputType, textSecret, checkIsPasswordStrong, generatePassword, handlePasswordChange]);
   
   const handleUseKeyFileChange = useCallback((checked: boolean) => {
       setUseKeyFile(checked);
@@ -385,19 +400,6 @@ export function EncryptorTool() {
       }
   }, []);
 
-  const checkIsPasswordStrong = useCallback((pwd: string) => {
-    const hasUpperCase = /[A-Z]/.test(pwd);
-    const hasLowerCase = /[a-z]/.test(pwd);
-    const hasNumbers = /\d/.test(pwd);
-    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
-    const hasMinLength = pwd.length >= 24;
-    return hasMinLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
-  }, []);
-
-  const handlePasswordChange = useCallback((pwd: string) => {
-    setPasswordIsStrong(checkIsPasswordStrong(pwd));
-  }, [checkIsPasswordStrong]);
-  
   const getPasswordStrengthColor = useCallback(() => {
     const pwd = passwordRef.current?.value || "";
     if (!pwd) return "border-input";

@@ -1,59 +1,48 @@
-# IttyBitz
+IttyBitz
 
 This is a client-side file and text encryption tool built with Next.js and Firebase Studio. It offers a secure and private way to encrypt sensitive information directly in your browser without ever sending it to a server.
 
-## Core Features
+Core Features
+	•	Client-Side Encryption/Decryption: All cryptographic operations happen in your browser. Your files and secrets are never sent to a server.
+	•	File & Text Support: Encrypt and decrypt both files and text snippets.
+	•	Password & Key File Protection: Secure your data with a strong password, an optional key file, or both for an added layer of security.
+	•	No Accounts Required: Works entirely without user accounts or sign-ins.
 
-- **Client-Side Encryption/Decryption:** All cryptographic operations happen in your browser. Your files and secrets are never sent to a server.
-- **File & Text Support:** Encrypt and decrypt both files and text snippets.
-- **Password & Key File Protection:** Secure your data with a strong password, an optional key file, or both for an added layer of security.
-- **No Accounts Required:** Works entirely without user accounts or sign-ins.
+⸻
 
----
+How to Use IttyBitz
 
-## How to Use IttyBitz
+The tool has two main modes: Encrypt and Decrypt, which you can select using the tabs at the top. Within each mode, you can choose to work with either a File or Text.
 
-The tool has two main modes: **Encrypt** and **Decrypt**, which you can select using the tabs at the top. Within each mode, you can choose to work with either a **File** or **Text**.
+Encrypting a File
+	1.	Select the Encrypt tab.
+	2.	Ensure the File option is selected.
+	3.	Upload the file you wish to encrypt.
+	4.	Enter a strong password, optionally add a key file, and click Encrypt.
+	5.	Download the encrypted file for safekeeping.
 
-### Encrypting a File
+Decrypting a File
+	1.	Select the Decrypt tab.
+	2.	Ensure the File option is selected.
+	3.	Upload the encrypted file.
+	4.	Enter the same password (and key file, if used) and click Decrypt.
+	5.	Download the decrypted file.
 
-1.  Select the **Encrypt** tab.
-2.  Ensure the **File** option is selected.
-3.  Click the file selection area to choose a file from your device, or drag and drop a file onto it.
-4.  Enter a strong password. The password field border will turn green when your password is at least 24 characters and includes uppercase letters, lowercase letters, numbers, and special characters.
-5.  (Optional) For extra security, enable the **Use Key File** switch and select an additional file to be used as part of the key.
-6.  Click the **Encrypt File** button.
-7.  Your browser will download the encrypted file, which will have an `.ib` extension added to its original name.
+Encrypting Text
+	1.	Select the Encrypt tab.
+	2.	Choose the Text option.
+	3.	Enter your text in the provided box.
+	4.	Enter a password (and optionally a key file).
+	5.	Copy or download the encrypted result.
 
-### Decrypting a File
+Decrypting Text
+	1.	Select the Decrypt tab.
+	2.	Choose the Text option.
+	3.	Paste your encrypted text into the box.
+	4.	Enter the password (and optional key file).
+	5.	Copy the decrypted text output.
 
-1.  Select the **Decrypt** tab.
-2.  Ensure the **File** option is selected.
-3.  Select the encrypted `.ib` file you want to decrypt.
-4.  Enter the exact password that was used to encrypt the file.
-5.  (Optional) If a key file was used during encryption, you must enable the **Use Key File** switch and select the exact same key file.
-6.  Click the **Decrypt File** button.
-7.  The original, decrypted file will be downloaded by your browser.
-
-### Encrypting Text
-
-1.  Select the **Encrypt** tab.
-2.  Select the **Text** option.
-3.  Type or paste your secret into the "Secret Text" area.
-4.  Enter a strong password and, optionally, add a key file.
-5.  Click the **Encrypt Text** button.
-6.  The encrypted text (a long string of characters) will appear in the "Result" box below. Use the **Copy** button to copy it to your clipboard.
-
-### Decrypting Text
-
-1.  Select the **Decrypt** tab.
-2.  Select the **Text** option.
-3.  Paste the encrypted text you want to decrypt into the "Secret Text" area.
-4.  Enter the password that was used to encrypt the text and provide the key file if one was used.
-5.  Click the **Decrypt Text** button.
-6.  The decrypted secret will appear in the "Result" box. For your privacy, the result is **blurred by default**. Click the **eyeball icon** to reveal the content.
-
----
+⸻
 
 ## Security Features
 
@@ -67,7 +56,8 @@ The security of your data is the highest priority. Here is a summary of the secu
 - **Secure Memory Handling:** After an encryption or decryption operation is complete, the application code makes an explicit effort to overwrite sensitive variables (like the derived key and salt) in memory, reducing the window of opportunity for sophisticated memory-scraping attacks.
 - **No User Tracking:** The application does not use cookies, analytics, or trackers. Your activity is your own.
 
----
+⸻
+
 ## 🔬 Third-Party Validation
 
 ### **Independent Security Review**
@@ -82,3 +72,15 @@ This application has undergone a detailed security analysis. You can view the fu
 - **FIPS 140-2 compatible**: Meets US government encryption standards
 - **NSA Suite B ready**: Compatible with top-tier government security requirements
 - **GDPR privacy by design**: Built from the ground up for maximum privacy protection
+
+⸻
+
+📜 Licensing
+
+IttyBitz is released under the Business Source License 1.1.
+	•	Non-commercial and personal use is free under this license.
+	•	Commercial or production use is not permitted under the open license until 4 years after the first release. At that point, the license will automatically convert to the Apache License 2.0, allowing unrestricted use.
+
+🔑 Commercial Licensing Available
+
+📧 Contact: size-gusty-caliber@duck.com

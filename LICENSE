@@ -1,35 +1,32 @@
 Business Source License 1.1
 
-## Parameters
+Parameters
+Licensor: The IttyBitz Project
 
-**Licensor**: The IttyBitz Project
-**Licensed Work**: The IttyBitz software, including all source code and related materials.
-**Change Date**: 4 years from the date of the first release of the Licensed Work under this license.
-**Change License**: The Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
-**Use Limitation**: The Licensed Work may not be used in a production capacity or for any commercial purpose without a separate commercial license from the Licensor. "Production capacity" means using the software to encrypt or decrypt files or data as part of any business process or service offered to third parties.
+Licensed Work: The IttyBitz software, including all source code and related materials.
 
-## License Grant
+Change Date: 4 years from the date of the first release of the Licensed Work under this license.
 
+Change License: The Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+
+Use Limitation: The Licensed Work may not be used in a production capacity or for any commercial purpose without a separate commercial license from the Licensor. "Production capacity" means using the software to encrypt or decrypt files or data as part of any business process or service offered to third parties.
+
+License Grant
 The Licensor grants you a non-exclusive, worldwide, royalty-free license to use, copy, and prepare derivative works of the Licensed Work, subject to the Use Limitation.
 
 On the Change Date, the Use Limitation will automatically terminate, and your use of the Licensed Work will be governed by the Change License.
 
-## Patents
-
+Patents
 The Licensor grants you a non-exclusive, worldwide, royalty-free license under patents owned or controlled by the Licensor to make, have made, use, sell, offer for sale, and import the Licensed Work. This license does not include any right to sublicense.
 
-## Trademarks
-
+Trademarks
 This license does not grant you any right to use the Licensor’s names, trademarks, service marks, or logos.
 
-## Disclaimer of Warranty and Limitation of Liability
-
+Disclaimer of Warranty and Limitation of Liability
 THE LICENSED WORK IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
 
-## Notices
-
+Notices
 You must retain all copyright, patent, trademark, and attribution notices that are present in the Licensed Work.
 
-## Governing Law
-
+Governing Law
 This license is governed by the laws of the jurisdiction in which the Licensor is located.

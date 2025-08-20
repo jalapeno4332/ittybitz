@@ -93,10 +93,9 @@ IttyBitz is released under the **Business Source License 1.1.**
 
 **📧 Contact: size-gusty-caliber@duck.com**
 
+<br/>
 
-# ittybitz - Local Setup Instructions
-
-## Run Locally for Enhanced Security
+## 💻  Ittybitz - Local Setup Instructions
 
 For maximum security when handling sensitive data like seed phrases, you can run ittybitz locally on your own machine.
 

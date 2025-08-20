@@ -14,6 +14,7 @@ import {
   RefreshCw,
   X,
   Heart,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 type Mode = "encrypt" | "decrypt";
@@ -116,7 +118,7 @@ const FileSelector = memo(({
         <div className="mb-2 text-primary">{icon}</div>
         <div className="w-full overflow-hidden">
           <h3 className="text-md font-semibold text-foreground">{label}</h3>
-          <p className={cn("mt-1 text-sm truncate", selectedFile ? "text-accent font-semibold" : "text-muted-foreground")}>
+          <p className={cn("mt-1 w-full overflow-hidden truncate text-sm", selectedFile ? "text-accent font-semibold" : "text-muted-foreground")}>
             {selectedFile ? selectedFile.name : description}
           </p>
         </div>
@@ -148,12 +150,12 @@ export function EncryptorTool() {
   const [file, setFile] = useState<File | null>(null);
   const [textSecret, setTextSecret] = useState('');
   const [outputText, setOutputText] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showDecryptedText, setShowDecryptedText] = useState(false);
   const [useKeyFile, setUseKeyFile] = useState(false);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const passwordRef = useRef<HTMLInputElement>(null);
   const [passwordIsStrong, setPasswordIsStrong] = useState(false);
   const [isCryptoAvailable, setIsCryptoAvailable] = useState(true);
   const { toast } = useToast();
@@ -170,9 +172,23 @@ export function EncryptorTool() {
     }
   }, [toast]);
 
+  const checkIsPasswordStrong = useCallback((pwd: string) => {
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasNumbers = /\d/.test(pwd);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    const hasMinLength = pwd.length >= 24;
+    return hasMinLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
+  }, []);
+
+  const handlePasswordChange = useCallback((pwd: string) => {
+    setPassword(pwd);
+    setPasswordIsStrong(checkIsPasswordStrong(pwd));
+  }, [checkIsPasswordStrong]);
+
   const resetState = useCallback(() => {
     setFile(null);
-    if(passwordRef.current) passwordRef.current.value = "";
+    setPassword('');
     setPasswordIsStrong(false);
     setShowPassword(false);
     setUseKeyFile(false);
@@ -236,18 +252,6 @@ export function EncryptorTool() {
     setter(selectedFile);
   }, [toast]);
   
-  const checkIsPasswordStrong = useCallback((pwd: string) => {
-    const hasUpperCase = /[A-Z]/.test(pwd);
-    const hasLowerCase = /[a-z]/.test(pwd);
-    const hasNumbers = /\d/.test(pwd);
-    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
-    const hasMinLength = pwd.length >= 24;
-    return hasMinLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
-  }, []);
-
-  const handlePasswordChange = useCallback((pwd: string) => {
-    setPasswordIsStrong(checkIsPasswordStrong(pwd));
-  }, [checkIsPasswordStrong]);
 
   const generatePassword = useCallback(() => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
@@ -261,12 +265,10 @@ export function EncryptorTool() {
         newPassword += charset.charAt(charIndex % charset.length);
       }
     }
-    if (passwordRef.current) {
-        passwordRef.current.value = newPassword;
-        handlePasswordChange(newPassword);
-    }
+    handlePasswordChange(newPassword);
     toast({ title: "Password Generated", description: "A new secure password has been generated." });
   }, [toast, handlePasswordChange]);
+
 
   const handleCopy = useCallback((textToCopy: string) => {
     if (!textToCopy) return;
@@ -289,7 +291,7 @@ export function EncryptorTool() {
   };
 
   const processData = useCallback(async () => {
-    let mutablePassword = passwordRef.current?.value || "";
+    let mutablePassword = password;
 
     const hasInput = inputType === 'file' ? !!file : !!textSecret;
     if (!hasInput) {
@@ -334,7 +336,7 @@ export function EncryptorTool() {
 
         if (inputType === 'file') {
             const blob = new Blob([resultBuffer]);
-            triggerDownload(blob, `${file!.name}.ibtz`);
+            triggerDownload(blob, `${file!.name}.ibitz`);
             setFile(null);
         } else {
             const base64String = btoa(String.fromCharCode(...new Uint8Array(resultBuffer)));
@@ -359,8 +361,8 @@ export function EncryptorTool() {
         resultBuffer = await decryptFile(inputBuffer, mutablePassword, keyFileBuffer);
         
         if (inputType === 'file') {
-             const resultFilename = file!.name.endsWith('.ibtz')
-              ? file!.name.slice(0, -'.ibtz'.length)
+             const resultFilename = file!.name.endsWith('.ibitz')
+              ? file!.name.slice(0, -'.ibitz'.length)
               : `decrypted-${file!.name}`;
             const blob = new Blob([resultBuffer]);
             triggerDownload(blob, resultFilename);
@@ -387,11 +389,11 @@ export function EncryptorTool() {
     } finally {
       // Clear sensitive data
       mutablePassword = ''; 
-      if (passwordRef.current) passwordRef.current.value = "";
+      setPassword('');
       setPasswordIsStrong(false);
       setIsLoading(false);
     }
-  }, [file, mode, keyFile, toast, inputType, textSecret, checkIsPasswordStrong, generatePassword, handlePasswordChange]);
+  }, [file, mode, keyFile, toast, inputType, textSecret, checkIsPasswordStrong, password]);
   
   const handleUseKeyFileChange = useCallback((checked: boolean) => {
       setUseKeyFile(checked);
@@ -401,16 +403,15 @@ export function EncryptorTool() {
   }, []);
 
   const getPasswordStrengthColor = useCallback(() => {
-    const pwd = passwordRef.current?.value || "";
-    if (!pwd) return "border-input";
-    if (checkIsPasswordStrong(pwd)) return "border-success";
+    if (!password) return "border-input";
+    if (checkIsPasswordStrong(password)) return "border-success";
     return "border-destructive";
-  }, [checkIsPasswordStrong]);
+  }, [checkIsPasswordStrong, password]);
 
   const isProcessButtonDisabled = () => {
     if (isLoading || !isCryptoAvailable) return true;
     const hasInput = inputType === 'file' ? !!file : !!textSecret;
-    const hasPassword = !!passwordRef.current?.value;
+    const hasPassword = !!password;
     if (!hasInput || !hasPassword) return true;
     
     if (mode === 'encrypt' && !passwordIsStrong) {
@@ -422,7 +423,7 @@ export function EncryptorTool() {
 
   const renderContent = (currentMode: Mode) => (
     <div className="space-y-6">
-       <div className="space-y-4">
+      <div className="space-y-4">
         <RadioGroup value={inputType} onValueChange={handleInputTypeChange} className="flex justify-center space-x-4">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="file" id="file-option" />
@@ -441,7 +442,7 @@ export function EncryptorTool() {
             onClear={() => setFile(null)}
             selectedFile={file}
             icon={<FileText size={32} />}
-            label="Select File"
+            label="Select File (100MB Max)"
             description={`Drag & drop or click to select file to ${currentMode}`}
           />
         ) : (
@@ -457,12 +458,27 @@ export function EncryptorTool() {
           </div>
         )}
         
-        <div>
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-                 <Input
+        <TooltipProvider>
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="password">Password</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="focus:outline-none">
+                      <Info className="h-4 w-4 text-orange-500" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Min 24 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+            <div className="relative mt-1">
+                <Input
                     id="password"
-                    ref={passwordRef}
+                    value={password}
                     type={showPassword ? "text" : "password"}
                     onChange={(e) => handlePasswordChange(e.target.value)}
                     placeholder="Enter password..."
@@ -476,16 +492,29 @@ export function EncryptorTool() {
                 </Button>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mt-2">
-                <Button variant="outline" size="sm" onClick={() => handleCopy(passwordRef.current?.value || '')} disabled={!passwordRef.current?.value}><Copy className="mr-1 h-3 w-3" />Copy</Button>
-                <Button variant="outline" size="sm" onClick={() => { if(passwordRef.current) { passwordRef.current.value = ""; handlePasswordChange("")} }} disabled={!passwordRef.current?.value}><X className="mr-1 h-3 w-3" />Clear</Button>
+                <Button variant="outline" size="sm" onClick={() => handleCopy(password)} disabled={!password}><Copy className="mr-1 h-3 w-3" />Copy</Button>
+                <Button variant="outline" size="sm" onClick={() => handlePasswordChange("")} disabled={!password}><X className="mr-1 h-3 w-3" />Clear</Button>
                 {currentMode === 'encrypt' && <Button variant="outline" size="sm" onClick={generatePassword}><RefreshCw className="mr-1 h-3 w-3" />Generate</Button>}
             </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
+          </div>
+          
+          <div className="flex items-center space-x-2">
             <Switch id="use-keyfile" checked={useKeyFile} onCheckedChange={handleUseKeyFileChange} />
-            <Label htmlFor="use-keyfile">Use Key File (Optional)</Label>
-        </div>
+             <div className="flex items-center gap-1">
+                <Label htmlFor="use-keyfile">Use Key File (Optional)</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="focus:outline-none">
+                      <Info className="h-4 w-4 text-orange-500" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Increase security by "attaching" a file to your encrypted data. The file will be required to decrypt the data. Any file will work, but image files (JPEG, PNG) provide the most entropy.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+          </div>
+        
 
         {useKeyFile && (
             <div className="animate-in fade-in-50">
@@ -500,6 +529,7 @@ export function EncryptorTool() {
                     />
             </div>
         )}
+        </TooltipProvider>
       </div>
 
        {outputText && (
@@ -556,7 +586,7 @@ export function EncryptorTool() {
           Secure by design. Simple by nature.
         </CardDescription>
         <p className="text-sm text-muted-foreground pt-2">
-          Secure, <a href="https://github.com/jalapeno4332/ittybitz" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">open-source</a>, client-side encryption and decryption.
+            Secure, <a href="https://github.com/jalapeno4332/ittybitz" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">open-source</a>, client-side encryption and decryption.
         </p>
       </CardHeader>
       <CardContent>
@@ -607,3 +637,7 @@ export function EncryptorTool() {
     </Card>
   );
 }
+
+    
+
+    

@@ -92,3 +92,54 @@ IttyBitz is released under the **Business Source License 1.1.**
 **🔑 Commercial licensing available**
 
 **📧 Contact: size-gusty-caliber@duck.com**
+
+
+# ittybitz - Local Setup Instructions
+
+## Run Locally for Enhanced Security
+
+For maximum security when handling sensitive data like seed phrases, you can run ittybitz locally on your own machine.
+
+### Prerequisites
+- Node.js 18+ (Download from [nodejs.org](https://nodejs.org))
+
+### Quick Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/jalapeno4332/ittybitz.git
+   cd ittybitz
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Build and run the application**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+4. **Open your browser**
+   - Navigate to: `http://localhost:3000`
+
+### Security Notes
+
+- ✅ **Open Source**: All code is auditable and transparent
+- ✅ **Offline Operation**: Works completely offline after initial setup
+- ✅ **No External Dependencies**: All cryptographic operations happen locally
+- ✅ **Air-Gap Compatible**: Can be run on isolated machines
+
+**For handling high-value secrets**, consider:
+- Running on an air-gapped machine
+- Auditing the source code before use
+- Using the production build for better performance
+
+### Troubleshooting
+
+If you encounter issues:
+1. Ensure Node.js 18+ is installed: `node --version`
+2. Clear dependencies and reinstall: `rm -rf node_modules && npm install`
+3. Check that no other services are using port 3000

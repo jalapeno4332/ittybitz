@@ -61,14 +61,18 @@ function validateInputs(dataBuffer: ArrayBuffer, password: string, isEncryption:
 // Derive a key from password and/or keyfile using PBKDF2
 async function deriveKey(password: string, salt: Uint8Array, keyFileData: ArrayBuffer | null): Promise<CryptoKey> {
   const passwordEncoder = new TextEncoder();
-  let passwordBuffer = passwordEncoder.encode(password);
-  let baseMaterial = passwordBuffer;
+  const passwordBytes = passwordEncoder.encode(password);
+  // Create a proper ArrayBuffer-backed Uint8Array
+  const passwordBuffer = new Uint8Array(new ArrayBuffer(passwordBytes.length));
+  passwordBuffer.set(passwordBytes);
+  let baseMaterial: Uint8Array = passwordBuffer;
   let combined: Uint8Array | null = null;
   
   try {
     // Combine password and keyfile data to form the base material for key derivation
     if (keyFileData) {
-      combined = new Uint8Array(baseMaterial.length + keyFileData.byteLength);
+      const combinedBuffer = new ArrayBuffer(baseMaterial.length + keyFileData.byteLength);
+      combined = new Uint8Array(combinedBuffer);
       combined.set(new Uint8Array(baseMaterial), 0);
       combined.set(new Uint8Array(keyFileData), baseMaterial.length);
       baseMaterial = combined;
@@ -76,16 +80,16 @@ async function deriveKey(password: string, salt: Uint8Array, keyFileData: ArrayB
     
     const baseKey = await crypto.subtle.importKey(
       'raw',
-      baseMaterial,
+      baseMaterial as BufferSource,
       { name: 'PBKDF2' },
       false,
       ['deriveKey']
     );
-
+    
     const derivedKey = await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt,
+        salt: salt as BufferSource,
         iterations: PBKDF2_ITERATIONS,
         hash: 'SHA-256',
       },
@@ -133,7 +137,7 @@ export async function encryptFile(dataBuffer: ArrayBuffer, password: string, key
     key = await deriveKey(password, salt, keyFileBuffer);
 
     encryptedContent = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as BufferSource },
       key,
       dataBuffer
     );
@@ -193,9 +197,9 @@ export async function decryptFile(encryptedBuffer: ArrayBuffer, password: string
     key = await deriveKey(password, salt, keyFileBuffer);
     
     const decryptedContent = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as BufferSource },
       key,
-      encryptedContent
+      encryptedContent as BufferSource
     );
     
     return decryptedContent;

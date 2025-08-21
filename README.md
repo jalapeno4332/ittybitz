@@ -124,7 +124,7 @@ For maximum security when handling sensitive data like seed phrases, you can run
 4. **Open your browser**
    - Navigate to: `http://localhost:3000`
 
-. **To Stop the App**
+5. **To Stop the App**
    - When you're done using IttyBitz, return to your terminal and press Ctrl+C to stop the server.
 
 ### Security Notes

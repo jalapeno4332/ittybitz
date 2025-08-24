@@ -69,7 +69,7 @@ The security of your data is the highest priority. Here is a summary of the secu
 ## 🔬 Third-party validation
 
 ### **Independent security review**
-This application has undergone a detailed security analysis. You can view the full report here: [Security analysis report](https://claude.ai/public/artifacts/f4bb6437-1130-4fd3-bc56-74b2399274f9) 🔗
+This application has undergone a detailed security analysis. You can view the full report here: [Security analysis report](https://claude.ai/public/artifacts/0aacfaf1-286d-4293-84fc-97cf0591b178) 🔗
 
 ### **Open source advantage**
 - **Transparent code**: every line of security code is publicly auditable

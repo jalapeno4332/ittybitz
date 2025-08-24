@@ -15,6 +15,11 @@ IttyBitz offers a secure and private way to encrypt sensitive information direct
 
 <br/>
 
+## 📣 Disclaimer
+**WARNING: This software has not yet been formally audited by a third party. Use at your own risk!
+
+<br/>
+
 ## ⚙️ Core features
 
 Here’s what you can do with IttyBitz:

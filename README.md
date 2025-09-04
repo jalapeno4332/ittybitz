@@ -15,11 +15,6 @@ IttyBitz offers a secure and private way to encrypt sensitive information direct
 
 <br/>
 
-## 📣 Disclaimer
-**WARNING: This software has not yet been formally audited by a third party. Use at your own risk!
-
-<br/>
-
 ## ⚙️ Core features
 
 Here’s what you can do with IttyBitz:
@@ -74,7 +69,7 @@ The security of your data is the highest priority. Here is a summary of the secu
 ## 🔬 Third-party validation
 
 ### **Independent security review**
-This application has undergone a detailed security analysis. You can view the full report here: [Security analysis report](https://claude.ai/public/artifacts/0aacfaf1-286d-4293-84fc-97cf0591b178) 🔗
+This application has undergone a detailed security analysis. You can view the full report here: [Security analysis report](https://claude.ai/public/artifacts/f4bb6437-1130-4fd3-bc56-74b2399274f9) 🔗
 
 ### **Open source advantage**
 - **Transparent code**: every line of security code is publicly auditable
@@ -125,9 +120,13 @@ For maximum security when handling sensitive data like seed phrases, you can run
    npm run build
    npm start
    ```
-
+   To run on a different port (e.g., 4000), use:
+   ```bash
+   npm start -- -p 4000
+   ```
+   
 4. **Open your browser**
-   - Navigate to: `http://localhost:3000`
+   - Navigate to: `http://localhost:3000` (or your chosen port)
 
 5. **To Stop the App**
    - When you're done using IttyBitz, return to your terminal and press Ctrl+C to stop the server.
@@ -150,3 +149,4 @@ If you encounter issues:
 1. Ensure Node.js 18+ is installed: `node --version`
 2. Clear dependencies and reinstall: `rm -rf node_modules && npm install`
 3. Check that no other services are using port 3000
+

@@ -15,6 +15,7 @@ import {
   X,
   Heart,
   Info,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -289,6 +290,14 @@ export function EncryptorTool() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+  
+  const generateKeyFile = useCallback(() => {
+    const keyData = new Uint8Array(64);
+    window.crypto.getRandomValues(keyData);
+    const blob = new Blob([keyData], { type: 'application/octet-stream' });
+    triggerDownload(blob, 'ittybitz-key.bin');
+    toast({ title: "Key File Generated", description: "Your new key file has been downloaded." });
+  }, [toast]);
 
   const processData = useCallback(async () => {
     let mutablePassword = password;
@@ -509,26 +518,34 @@ export function EncryptorTool() {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Increase security by "attaching" a file to your encrypted data. The file will be required to decrypt the data. Any file will work, but image files (JPEG, PNG) provide the most entropy.</p>
+                    <p>For additional security, you can use a key file. Use the generator to create a new, highly secure key file (recommended), or select an existing file. This file will be required along with your password to decrypt data.</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
           </div>
         
-
-        {useKeyFile && (
-            <div className="animate-in fade-in-50">
-                 <FileSelector
-                    id={`${currentMode}-keyfile`}
-                    onFileChange={(e) => handleFileChange(e, setKeyFile)}
-                    onClear={() => setKeyFile(null)}
-                    selectedFile={keyFile}
-                    icon={<KeyRound size={32} />}
-                    label="Select Key File"
-                    description="Drag & drop or click for an extra layer of security"
-                    />
+          {useKeyFile && (
+            <div className="animate-in fade-in-50 space-y-2">
+              <FileSelector
+                id={`${currentMode}-keyfile`}
+                onFileChange={(e) => handleFileChange(e, setKeyFile)}
+                onClear={() => setKeyFile(null)}
+                selectedFile={keyFile}
+                icon={<KeyRound size={32} />}
+                label="Select Key File"
+                description="Drag & drop or click to select an existing file"
+              />
+              <div className="flex items-center gap-2">
+                <hr className="flex-grow border-t border-muted-foreground/20" />
+                <span className="text-xs text-muted-foreground">OR</span>
+                <hr className="flex-grow border-t border-muted-foreground/20" />
+              </div>
+              <Button variant="outline" className="w-full" onClick={generateKeyFile}>
+                <Download className="mr-2 h-4 w-4" />
+                Generate & Download New Key File
+              </Button>
             </div>
-        )}
+          )}
         </TooltipProvider>
       </div>
 
@@ -633,11 +650,8 @@ export function EncryptorTool() {
                 </div>
             </DialogContent>
         </Dialog>
+        <p className="text-xs text-muted-foreground">v1.2</p>
       </CardFooter>
     </Card>
   );
 }
-
-    
-
-    

@@ -19,7 +19,7 @@ IttyBitz offers a secure and private way to encrypt sensitive information direct
 
 Here’s what you can do with IttyBitz:
 - **Client-side encryption/decryption**: all cryptographic operations happen in your browser. Your files and secrets are never sent to a server.
-- **Password & key file protection**: secure your data with a strong password, an optional key file, or both for an added layer of security.
+- **Password & key file protection**: secure your data with a strong password, an optional key file, or both for an added layer of security. You can use any existing file or generate a new, cryptographically secure key file directly within the app.
 - **File & text support**: encrypt and decrypt both files and text snippets.
 - **No accounts required**: works entirely without user accounts or signins.
 
@@ -36,8 +36,8 @@ At the top, you’ll find two simple tabs:  **Encrypt 🔒**  and **Decrypt 🔑
 |	1.	Select the Encrypt tab.|	1.	Select the Encrypt tab.|   	
 |	2.	Ensure the File option is selected.	|	2.	Choose the Text option.|
 |	3.	Upload the file you wish to encrypt.|	3.	Enter your text in the provided box.|
-|	4.	Enter a strong password, optionally add a key file, and click Encrypt. |	4.	Enter a password (and optionally a key file).|
-|	5.	Download the encrypted file for safekeeping.|	5.	Copy or download the encrypted result.|
+|	4.	Enter a strong password. For extra security, toggle "Use Key File" to either select an existing file or generate and download a new one. |	4.	Enter a password. For extra security, toggle "Use Key File" to add a key file.|
+|	5.	Click Encrypt and download the encrypted file for safekeeping.|	5.	Copy or download the encrypted result.|
 
 - In **Decrypt** mode, you simply unlock your protected content and get it back instantly—only if you hold the right key.
 
@@ -59,7 +59,7 @@ The security of your data is the highest priority. Here is a summary of the secu
 
 - **Strong encryption standard:** IttyBitz uses **AES-256-GCM**, which is the standard for symmetric encryption recommended by the NSA for Top Secret information. It provides both confidentiality and data integrity.
 - **Strong key derivation:** your password is not used directly as the encryption key. Instead, it is run through the **PBKDF2** (Password-Based Key Derivation Function 2) algorithm with **1,000,000 iterations**. This makes brute-force attacks against your password extremely slow and computationally expensive, even for weak passwords.
-- **Cryptographically secure randomness:** the application uses `window.crypto.getRandomValues()` to generate the salt for key derivation, the Initialization Vector (IV) for AES-GCM, and the random characters for the password generator. This is a cryptographically secure pseudo-random number generator (CSPRNG) that is suitable for security-sensitive applications.
+- **Cryptographically secure randomness:** the application uses `window.crypto.getRandomValues()` to generate the salt for key derivation, the Initialization Vector (IV) for AES-GCM, the random characters for the password generator, and the data for the key file generator. This is a cryptographically secure pseudo-random number generator (CSPRNG) that is suitable for security-sensitive applications.
 - **Password strength indicator:** to encourage strong security practices, the UI provides real-time feedback, guiding users to create passwords that are at least 24 characters long and contain a mix of character types.
 - **Secure memory handling:** after an encryption or decryption operation is complete, the application code makes an explicit effort to overwrite sensitive variables (like the derived key and salt) in memory, reducing the window of opportunity for sophisticated memory-scraping attacks.
 - **No user tracking:** the application does not use cookies, analytics, or trackers. Your activity is your own.
@@ -149,4 +149,3 @@ If you encounter issues:
 1. Ensure Node.js 18+ is installed: `node --version`
 2. Clear dependencies and reinstall: `rm -rf node_modules && npm install`
 3. Check that no other services are using port 3000
-

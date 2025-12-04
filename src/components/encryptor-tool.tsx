@@ -650,7 +650,7 @@ export function EncryptorTool() {
                 </div>
             </DialogContent>
         </Dialog>
-        <p className="text-xs text-muted-foreground">v1.2</p>
+        <p className="text-xs text-muted-foreground">v1.2.1</p>
       </CardFooter>
     </Card>
   );

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef, type ChangeEvent, type DragEvent, memo, useCallback, useEffect } from "react";
+import QRCode from "qrcode.react";
 import {
   KeyRound,
   Lock,
@@ -16,6 +17,7 @@ import {
   Heart,
   Info,
   Download,
+  QrCode,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -159,6 +161,8 @@ export function EncryptorTool() {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordIsStrong, setPasswordIsStrong] = useState(false);
   const [isCryptoAvailable, setIsCryptoAvailable] = useState(true);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const qrCodeRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -297,6 +301,37 @@ export function EncryptorTool() {
     const blob = new Blob([keyData], { type: 'application/octet-stream' });
     triggerDownload(blob, 'ittybitz-key.bin');
     toast({ title: "Key File Generated", description: "Your new key file has been downloaded." });
+  }, [toast]);
+
+  const handleDownloadQrCode = useCallback(() => {
+    if (!qrCodeRef.current) return;
+    const originalCanvas = qrCodeRef.current.querySelector('canvas');
+    if (!originalCanvas) return;
+    
+    const PADDING = 20;
+    const newCanvas = document.createElement('canvas');
+    const newCtx = newCanvas.getContext('2d');
+    if (!newCtx) return;
+
+    newCanvas.width = originalCanvas.width + PADDING * 2;
+    newCanvas.height = originalCanvas.height + PADDING * 2;
+    
+    newCtx.fillStyle = '#ffffff';
+    newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
+    newCtx.drawImage(originalCanvas, PADDING, PADDING);
+    
+    const pngUrl = newCanvas
+      .toDataURL("image/png")
+      .replace("image/png", "image/octet-stream");
+    
+    const a = document.createElement("a");
+    a.href = pngUrl;
+    a.download = "encrypted-qr.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    toast({ title: "QR Code downloaded" });
   }, [toast]);
 
   const processData = useCallback(async () => {
@@ -559,11 +594,11 @@ export function EncryptorTool() {
                 readOnly
                 rows={5}
                 className={cn(
-                  "pr-20",
+                  "pr-12",
                   mode === 'decrypt' && inputType === 'text' && !showDecryptedText && "blur-sm"
                 )}
               />
-              <div className="absolute right-1 top-1 flex items-center">
+              <div className="absolute right-1 top-1 flex flex-col items-center">
                  {mode === 'decrypt' && inputType === 'text' && (
                   <Button type="button" variant="ghost" size="icon" className="h-auto p-2" onClick={() => setShowDecryptedText(!showDecryptedText)}>
                     {showDecryptedText ? <EyeOff /> : <Eye />}
@@ -572,6 +607,30 @@ export function EncryptorTool() {
                 <Button type="button" variant="ghost" size="icon" className="h-auto p-2" onClick={() => handleCopy(outputText)}>
                     <Copy />
                 </Button>
+                 {mode === 'encrypt' && inputType === 'text' && (
+                    <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="ghost" size="icon" className="h-auto p-2">
+                            <QrCode />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Encrypted QR Code</DialogTitle>
+                          <DialogDescription>
+                            Scan this code to transfer the encrypted text.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex flex-col items-center gap-4 py-4" ref={qrCodeRef}>
+                           <QRCode value={outputText} size={256} />
+                           <Button onClick={handleDownloadQrCode}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PNG
+                           </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
               </div>
             </div>
           </div>
@@ -650,8 +709,10 @@ export function EncryptorTool() {
                 </div>
             </DialogContent>
         </Dialog>
-        <p className="text-xs text-muted-foreground">v1.2.1</p>
+        <p className="mt-4 text-xs text-muted-foreground">v1.2.1</p>
       </CardFooter>
     </Card>
   );
 }
+
+    

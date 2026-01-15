@@ -709,7 +709,7 @@ export function EncryptorTool() {
                 </div>
             </DialogContent>
         </Dialog>
-        <p className="mt-4 text-xs text-muted-foreground">v1.2.1</p>
+        <p className="mt-4 text-xs text-muted-foreground">v1.3.0</p>
       </CardFooter>
     </Card>
   );

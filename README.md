@@ -21,6 +21,7 @@ Here’s what you can do with IttyBitz:
 - **Client-side encryption/decryption**: all cryptographic operations happen in your browser. Your files and secrets are never sent to a server.
 - **Password & key file protection**: secure your data with a strong password, an optional key file, or both for an added layer of security. You can use any existing file or generate a new, cryptographically secure key file directly within the app.
 - **File & text support**: encrypt and decrypt both files and text snippets.
+- **QR Code Sharing**: easily share encrypted text snippets via a downloadable QR code.
 - **No accounts required**: works entirely without user accounts or signins.
 
 <br/>
@@ -37,7 +38,7 @@ At the top, you’ll find two simple tabs:  **Encrypt 🔒**  and **Decrypt 🔑
 |	2.	Ensure the File option is selected.	|	2.	Choose the Text option.|
 |	3.	Upload the file you wish to encrypt.|	3.	Enter your text in the provided box.|
 |	4.	Enter a strong password. For extra security, toggle "Use Key File" to either select an existing file or generate and download a new one. |	4.	Enter a password. For extra security, toggle "Use Key File" to add a key file.|
-|	5.	Click Encrypt and download the encrypted file for safekeeping.|	5.	Copy or download the encrypted result.|
+|	5.	Click Encrypt and download the encrypted file for safekeeping.|	5.	After encrypting, you can copy the text, or click the **QR code icon** to view and download the encrypted output as a PNG file for easy, secure sharing.|
 
 - In **Decrypt** mode, you simply unlock your protected content and get it back instantly—only if you hold the right key.
 

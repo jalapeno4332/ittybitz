@@ -18,8 +18,10 @@ import {
   Info,
   Download,
   QrCode,
+  Shield,
+  Globe,
+  UserX,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -711,67 +713,122 @@ export function EncryptorTool() {
     </div>
   );
 
+  const tabTriggerClasses = "font-semibold data-[state=active]:bg-gradient-to-br data-[state=active]:from-yellow-400 data-[state=active]:via-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg";
+
   return (
-    <Card className="w-full max-w-md shadow-2xl bg-card/80 backdrop-blur-sm border border-zinc-700">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-2">
-          <img src="/logo.png" alt="IttyBitz Logo" width={64} height={64} />
-        </div>
-        <CardTitle className="text-3xl font-bold">IttyBitz</CardTitle>
-        <CardDescription className="font-semibold text-white">
-          Secure by design. Simple by nature.
-        </CardDescription>
-        <p className="text-sm text-muted-foreground pt-2">
-            Secure, <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">open-source</a>, client-side encryption and decryption.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="encrypt" className="w-full" onValueChange={handleModeChange}>
-          <TabsList className="grid w-full grid-cols-2 bg-zinc-800 p-1">
-            <TabsTrigger value="encrypt" className="font-semibold data-[state=active]:bg-gradient-to-br data-[state=active]:from-yellow-400 data-[state=active]:via-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg">
+    <Tabs value={mode} onValueChange={handleModeChange} className="flex flex-col min-h-screen">
+      {/* ---- HEADER ---- */}
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-700 bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="IttyBitz Logo" width={28} height={28} />
+            <span className="text-lg font-bold">IttyBitz</span>
+          </div>
+          <TabsList className="hidden sm:inline-flex bg-zinc-800 p-1">
+            <TabsTrigger value="encrypt" className={tabTriggerClasses}>
               <Lock className="mr-2 h-4 w-4" />
               Encrypt
             </TabsTrigger>
-            <TabsTrigger value="decrypt" className="font-semibold data-[state=active]:bg-gradient-to-br data-[state=active]:from-yellow-400 data-[state=active]:via-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg">
+            <TabsTrigger value="decrypt" className={tabTriggerClasses}>
               <Unlock className="mr-2 h-4 w-4" />
               Decrypt
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="encrypt" className="pt-6">
+        </div>
+        <div className="sm:hidden border-t border-zinc-800 px-4 pb-2 pt-1">
+          <TabsList className="grid w-full grid-cols-2 bg-zinc-800 p-1">
+            <TabsTrigger value="encrypt" className={tabTriggerClasses}>
+              <Lock className="mr-2 h-4 w-4" />
+              Encrypt
+            </TabsTrigger>
+            <TabsTrigger value="decrypt" className={tabTriggerClasses}>
+              <Unlock className="mr-2 h-4 w-4" />
+              Decrypt
+            </TabsTrigger>
+          </TabsList>
+        </div>
+      </header>
+
+      {/* ---- MAIN CONTENT ---- */}
+      <div className="flex-1 w-full">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 py-6 sm:py-8">
+          {/* Desktop-only large logo + name */}
+          <div className="hidden sm:flex items-center justify-center gap-3 mb-6">
+            <img src="/logo.png" alt="IttyBitz Logo" width={48} height={48} />
+            <span className="text-4xl font-bold text-white">IttyBitz</span>
+          </div>
+          <div className="mb-6 text-center">
+            <p className="text-lg font-semibold text-white">Secure by design. Simple by nature.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Secure, <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">open-source</a>, client-side encryption and decryption.
+            </p>
+          </div>
+          <TabsContent value="encrypt">
             {renderContent("encrypt")}
           </TabsContent>
-          <TabsContent value="decrypt" className="pt-6">
+          <TabsContent value="decrypt">
             {renderContent("decrypt")}
           </TabsContent>
-        </Tabs>
-      </CardContent>
-       <CardFooter className="flex-col items-center justify-center pt-6 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <Heart className="h-4 w-4 text-red-500" />
-          <span>Enjoying IttyBitz?</span>
+          {/* Desktop-only feature highlights */}
+          <div className="hidden sm:grid grid-cols-3 gap-4 mt-8 text-left">
+            <div className="flex items-start gap-2">
+              <Shield className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-white">AES-256-GCM</p>
+                <p className="text-xs text-muted-foreground">Military-grade encryption with 1M iteration key derivation.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Globe className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-white">100% Client-Side</p>
+                <p className="text-xs text-muted-foreground">Nothing leaves your browser. No servers, no uploads, no tracking.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <UserX className="h-4 w-4 mt-0.5 text-accent shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-white">No Accounts</p>
+                <p className="text-xs text-muted-foreground">No sign-ups or logins. Just encrypt and go.</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="link" className="text-accent p-0 h-auto">Support this project</Button>
-            </DialogTrigger>
-            <DialogContent>
+      </div>
+
+      {/* ---- FOOTER ---- */}
+      <footer className="w-full border-t border-zinc-700 bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Heart className="h-3 w-3 text-red-500" />
+            <span>Enjoying IttyBitz?</span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="link" className="text-accent p-0 h-auto text-xs">Support this project</Button>
+              </DialogTrigger>
+              <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Support IttyBitz</DialogTitle>
-                    <DialogDescription>
-                        If you find this tool useful, please consider supporting its development. Your donation helps keep the project alive and ad-free.
-                    </DialogDescription>
+                  <DialogTitle>Support IttyBitz</DialogTitle>
+                  <DialogDescription>
+                    If you find this tool useful, please consider supporting its development. Your donation helps keep the project alive and ad-free.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-4 py-4">
-                    <QRCode value="https://coinos.io/svrn_money" size={128} />
-                    <a href="https://coinos.io/svrn_money" target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline break-all">
-                        https://coinos.io/svrn_money
-                    </a>
+                  <QRCode value="https://coinos.io/svrn_money" size={128} />
+                  <a href="https://coinos.io/svrn_money" target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline break-all">
+                    https://coinos.io/svrn_money
+                  </a>
                 </div>
-            </DialogContent>
-        </Dialog>
-        <p className="mt-4 text-xs text-muted-foreground">v1.3.0</p>
-      </CardFooter>
-    </Card>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="flex items-center gap-3">
+            <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer" className="hover:underline">GitHub</a>
+            <span>v1.3.0</span>
+          </div>
+        </div>
+      </footer>
+    </Tabs>
   );
 }
 

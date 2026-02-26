@@ -86,13 +86,9 @@ This application has undergone a detailed security analysis. You can view the fu
 
 ## 📜 Licensing
 
-IttyBitz is released under the **Business Source License 1.1.**
-- Non-commercial and personal use is free under this license.
-- Commercial or production use is not permitted under the open license until 4 years after the first release. At that point, the license will automatically convert to the Apache License 2.0, allowing unrestricted use.
+IttyBitz is free software released under the [**GNU General Public License v3.0**](LICENSE).
 
-**🔑 Commercial licensing available**
-
-**📧 Contact: size-gusty-caliber@duck.com**
+You are free to use, modify, and distribute this software. Any derivative works must also be released under the GPLv3.
 
 <br/>
 

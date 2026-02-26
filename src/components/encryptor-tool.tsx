@@ -37,6 +37,28 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 type Mode = "encrypt" | "decrypt";
 type InputType = "file" | "text";
 
+// Chunked base64 encode/decode to avoid stack overflow on large buffers.
+// The spread operator in btoa(String.fromCharCode(...arr)) exceeds the
+// maximum call stack size for buffers larger than ~65KB.
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const CHUNK_SIZE = 0x8000; // 32KB — well under any engine's argument limit
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE);
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 const validateAndSanitizeFile = (file: File) => {
   if (file.name.includes('..') || 
       file.name.includes('/') || 
@@ -146,6 +168,7 @@ const FileSelector = memo(({
 FileSelector.displayName = "FileSelector";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+const QR_MAX_CHARS = 2_953; // QR version 40, error correction M, byte mode
 
 export function EncryptorTool() {
   const [mode, setMode] = useState<Mode>("encrypt");
@@ -163,7 +186,17 @@ export function EncryptorTool() {
   const [isCryptoAvailable, setIsCryptoAvailable] = useState(true);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const qrCodeRef = useRef<HTMLDivElement>(null);
+  const clipboardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
+
+  // Clean up clipboard auto-clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (clipboardTimeoutRef.current) {
+        clearTimeout(clipboardTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!window.crypto || !window.crypto.subtle || !window.crypto.getRandomValues) {
@@ -261,13 +294,18 @@ export function EncryptorTool() {
   const generatePassword = useCallback(() => {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
     const passwordLength = 32;
+    const charsetLength = charset.length;
+    // Rejection sampling: discard values that would cause modulo bias.
+    // limit is the largest multiple of charsetLength that fits in a Uint32.
+    const limit = Math.floor(0x100000000 / charsetLength) * charsetLength;
     let newPassword = "";
-    const array = new Uint32Array(passwordLength);
-    window.crypto.getRandomValues(array);
-    for (let i = 0; i < passwordLength; i++) {
-      const charIndex = array[i];
-      if (charIndex !== undefined) {
-        newPassword += charset.charAt(charIndex % charset.length);
+    while (newPassword.length < passwordLength) {
+      const array = new Uint32Array(passwordLength - newPassword.length);
+      window.crypto.getRandomValues(array);
+      for (let i = 0; i < array.length && newPassword.length < passwordLength; i++) {
+        if (array[i]! < limit) {
+          newPassword += charset.charAt(array[i]! % charsetLength);
+        }
       }
     }
     handlePasswordChange(newPassword);
@@ -278,7 +316,25 @@ export function EncryptorTool() {
   const handleCopy = useCallback((textToCopy: string) => {
     if (!textToCopy) return;
     navigator.clipboard.writeText(textToCopy).then(() => {
-      toast({ title: "Copied to clipboard" });
+      toast({ title: "Copied to clipboard", description: "Clipboard will auto-clear in 60 seconds." });
+
+      // Reset any existing auto-clear timer
+      if (clipboardTimeoutRef.current) {
+        clearTimeout(clipboardTimeoutRef.current);
+      }
+
+      // Auto-clear clipboard after 60 seconds (best-effort)
+      clipboardTimeoutRef.current = setTimeout(async () => {
+        try {
+          const current = await navigator.clipboard.readText();
+          if (current === textToCopy) {
+            await navigator.clipboard.writeText('');
+          }
+        } catch {
+          // Clipboard read may fail if tab is not focused — silently ignore
+        }
+        clipboardTimeoutRef.current = null;
+      }, 60_000);
     }).catch(() => {
        toast({ title: "Failed to copy", variant: "destructive" });
     });
@@ -383,7 +439,7 @@ export function EncryptorTool() {
             triggerDownload(blob, `${file!.name}.ibitz`);
             setFile(null);
         } else {
-            const base64String = btoa(String.fromCharCode(...new Uint8Array(resultBuffer)));
+            const base64String = uint8ArrayToBase64(new Uint8Array(resultBuffer));
             setOutputText(base64String);
             setTextSecret('');
         }
@@ -393,13 +449,8 @@ export function EncryptorTool() {
         if (inputType === 'file') {
             inputBuffer = await file!.arrayBuffer();
         } else {
-            const binaryString = atob(textSecret);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            inputBuffer = bytes.buffer;
+            const bytes = base64ToUint8Array(textSecret);
+            inputBuffer = bytes.buffer as ArrayBuffer;
         }
 
         resultBuffer = await decryptFile(inputBuffer, mutablePassword, keyFileBuffer);
@@ -622,11 +673,20 @@ export function EncryptorTool() {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="flex flex-col items-center gap-4 py-4" ref={qrCodeRef}>
-                           <QRCode value={outputText} size={256} />
-                           <Button onClick={handleDownloadQrCode}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download PNG
-                           </Button>
+                           {outputText.length <= QR_MAX_CHARS ? (
+                             <>
+                               <QRCode value={outputText} size={256} />
+                               <Button onClick={handleDownloadQrCode}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download PNG
+                               </Button>
+                             </>
+                           ) : (
+                             <div className="text-sm text-yellow-400 p-3 bg-yellow-900/20 rounded-md text-center">
+                               <p className="font-medium">QR code unavailable</p>
+                               <p className="mt-1">Output is {outputText.length.toLocaleString()} characters, which exceeds the QR code capacity of {QR_MAX_CHARS.toLocaleString()} characters. Use the copy button instead.</p>
+                             </div>
+                           )}
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -702,7 +762,7 @@ export function EncryptorTool() {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-4 py-4">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=https://coinos.io/svrn_money" alt="Donation QR Code" width="128" height="128" />
+                    <QRCode value="https://coinos.io/svrn_money" size={128} />
                     <a href="https://coinos.io/svrn_money" target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline break-all">
                         https://coinos.io/svrn_money
                     </a>

@@ -824,7 +824,7 @@ export function EncryptorTool() {
           </div>
           <div className="flex items-center gap-3">
             <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer" className="hover:underline">GitHub</a>
-            <span>v1.3.0</span>
+            <span>v1.4.0</span>
           </div>
         </div>
       </footer>

@@ -2,16 +2,6 @@
 
 const nextConfig = {
   output: 'export',
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
 };
 
 // The bundle analyzer is a Webpack-only plugin.

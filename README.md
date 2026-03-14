@@ -62,7 +62,7 @@ The security of your data is the highest priority. Here is a summary of the secu
 - **Strong key derivation:** your password is not used directly as the encryption key. Instead, it is run through the **PBKDF2** (Password-Based Key Derivation Function 2) algorithm with **1,000,000 iterations**. This makes brute-force attacks against your password extremely slow and computationally expensive, even for weak passwords.
 - **Cryptographically secure randomness:** the application uses `window.crypto.getRandomValues()` to generate the salt for key derivation, the Initialization Vector (IV) for AES-GCM, the random characters for the password generator, and the data for the key file generator. This is a cryptographically secure pseudo-random number generator (CSPRNG) that is suitable for security-sensitive applications.
 - **Password strength indicator:** to encourage strong security practices, the UI provides real-time feedback, guiding users to create passwords that are at least 24 characters long and contain a mix of character types.
-- **Secure memory handling:** after an encryption or decryption operation is complete, the application code makes an explicit effort to overwrite sensitive variables (like the derived key and salt) in memory, reducing the window of opportunity for sophisticated memory-scraping attacks.
+- **Best-effort memory clearing:** after an encryption or decryption operation is complete, the application overwrites sensitive variables (like the derived key and salt) in memory. Note: JavaScript's garbage collector may retain copies of data elsewhere in the heap, so this is a best-effort mitigation rather than a guarantee.
 - **No user tracking:** the application does not use cookies, analytics, or trackers. Your activity is your own.
 
 <br/>
@@ -77,10 +77,10 @@ This application has undergone a detailed security analysis. You can view the fu
 - **Community verified**: security experts worldwide can review our implementation
 - **No hidden backdoors**: impossible to hide security vulnerabilities
 
-### **Industry-standard compliance**
-- **FIPS 140-2 compatible**: meets US government encryption standards
-- **NSA Suite B ready**: compatible with top-tier government security requirements
-- **GDPR privacy by design**: built from the ground up for maximum privacy protection
+### **Industry-standard algorithms**
+- **FIPS-approved algorithms**: uses AES-256-GCM and PBKDF2-HMAC-SHA-256, which are approved under FIPS 140-2 (note: this app has not undergone formal FIPS certification)
+- **Strong key derivation**: 1,000,000 PBKDF2 iterations to resist brute-force attacks
+- **Privacy-focused design**: no accounts, no servers, no tracking — all operations stay in your browser
 
 <br/>
 
@@ -132,7 +132,7 @@ For maximum security when handling sensitive data like seed phrases, you can run
 
 - ✅ **Open Source**: All code is auditable and transparent
 - ✅ **Offline Operation**: Works completely offline after initial setup
-- ✅ **No External Dependencies**: All cryptographic operations happen locally
+- ✅ **No External Dependencies**: All operations happen locally with no external network requests
 - ✅ **Air-Gap Compatible**: Can be run on isolated machines
 
 **For handling high-value secrets**, consider:

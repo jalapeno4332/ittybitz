@@ -318,7 +318,7 @@ export function EncryptorTool() {
   const handleCopy = useCallback((textToCopy: string) => {
     if (!textToCopy) return;
     navigator.clipboard.writeText(textToCopy).then(() => {
-      toast({ title: "Copied to clipboard", description: "Clipboard will auto-clear in 60 seconds." });
+      toast({ title: "Copied to clipboard", description: "Auto-clear will be attempted in 60 seconds (may not work if tab loses focus)." });
 
       // Reset any existing auto-clear timer
       if (clipboardTimeoutRef.current) {
@@ -474,9 +474,23 @@ export function EncryptorTool() {
         description: `Your ${inputType} has been successfully ${mode === 'encrypt' ? 'encrypted' : 'decrypted'}.`,
       });
     } catch (error: any) {
-        const safeMessage = (error.message?.toLowerCase().includes('decrypt') || error.message?.toLowerCase().includes('corrupted'))
-          ? 'Decryption failed. The password or key file may be incorrect, or the data may be corrupted.'
-          : error.message || 'An unknown error occurred.';
+        const knownSafeMessages = [
+          'Invalid encrypted data format.',
+          'Cannot process empty data.',
+          'Password must be a string.',
+          'Password is too long.',
+          'Password contains invalid characters.',
+          'A password is required for encryption.',
+          'A password or key file is required for decryption.',
+          'Web Crypto API not available.',
+          'This file was encrypted with a newer version of IttyBitz. Please update the app.',
+        ];
+        const raw = error.message || '';
+        const safeMessage = knownSafeMessages.includes(raw)
+          ? raw
+          : mode === 'decrypt'
+            ? 'Decryption failed. The password or key file may be incorrect, or the data may be corrupted.'
+            : 'Processing failed. Please try again.';
 
         toast({
             title: "Processing Error",
@@ -721,7 +735,7 @@ export function EncryptorTool() {
       <header className="sticky top-0 z-50 w-full border-b border-zinc-700 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="IttyBitz Logo" width={28} height={28} />
+            <img src="/logo.webp" alt="IttyBitz Logo" width={28} height={28} />
             <span className="text-lg font-bold">IttyBitz</span>
           </div>
           <TabsList className="hidden sm:inline-flex bg-zinc-800 p-1">
@@ -754,7 +768,7 @@ export function EncryptorTool() {
         <div className="mx-auto max-w-2xl px-4 sm:px-6 py-6 sm:py-8">
           {/* Desktop-only large logo + name */}
           <div className="hidden sm:flex items-center justify-center gap-3 mb-6">
-            <img src="/logo.png" alt="IttyBitz Logo" width={48} height={48} />
+            <img src="/logo.webp" alt="IttyBitz Logo" width={48} height={48} />
             <span className="text-4xl font-bold text-white">IttyBitz</span>
           </div>
           <div className="mb-6 text-center">
@@ -824,7 +838,7 @@ export function EncryptorTool() {
           </div>
           <div className="flex items-center gap-3">
             <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer" className="hover:underline">GitHub</a>
-            <span>v1.4.0</span>
+            <span>v 2.0.0 🔑 Lockdown</span>
           </div>
         </div>
       </footer>

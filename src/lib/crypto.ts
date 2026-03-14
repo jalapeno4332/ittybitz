@@ -6,6 +6,26 @@ const IV_LENGTH = 12; // bytes for AES-GCM
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 const MAX_PASSWORD_LENGTH = 1024; // Reasonable upper bound
 
+// Format version header: "IBTZ" magic bytes + 1-byte version number
+// v0 (legacy): no header — raw salt || iv || ciphertext
+// v1: IBTZ\x01 || salt || iv || ciphertext
+const FORMAT_MAGIC = new Uint8Array([0x49, 0x42, 0x54, 0x5A]); // "IBTZ"
+const FORMAT_VERSION = 1;
+const FORMAT_HEADER_LENGTH = FORMAT_MAGIC.length + 1; // 5 bytes
+
+function hasFormatHeader(data: Uint8Array): boolean {
+  if (data.length < FORMAT_HEADER_LENGTH) return false;
+  return data[0] === FORMAT_MAGIC[0] &&
+         data[1] === FORMAT_MAGIC[1] &&
+         data[2] === FORMAT_MAGIC[2] &&
+         data[3] === FORMAT_MAGIC[3];
+}
+
+function getFormatVersion(data: Uint8Array): number {
+  if (!hasFormatHeader(data)) return 0; // legacy format
+  return data[4]!;
+}
+
 // Enhanced secure memory clearing
 function secureErase(buffer: ArrayBuffer | Uint8Array | null | undefined): void {
   if (!buffer) return;
@@ -14,15 +34,14 @@ function secureErase(buffer: ArrayBuffer | Uint8Array | null | undefined): void 
     ? new Uint8Array(buffer) 
     : new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
   
-  // Multiple overwrite passes with random data
+  // Multiple overwrite passes with random data (best-effort; JS GC may retain copies)
   for (let pass = 0; pass < 3; pass++) {
     try {
       crypto.getRandomValues(view);
     } catch {
-      // Fallback if crypto unavailable
-      for (let i = 0; i < view.length; i++) {
-        view[i] = Math.floor(Math.random() * 256);
-      }
+      // If CSPRNG is unavailable, zero-fill only — never use Math.random() for security ops
+      view.fill(0);
+      return;
     }
   }
   
@@ -142,11 +161,17 @@ export async function encryptFile(dataBuffer: ArrayBuffer, password: string, key
       dataBuffer
     );
 
-    // Prepend salt and IV to the encrypted content.
-    const encryptedFile = new Uint8Array(salt.length + iv.length + encryptedContent.byteLength);
-    encryptedFile.set(salt, 0);
-    encryptedFile.set(iv, salt.length);
-    encryptedFile.set(new Uint8Array(encryptedContent), salt.length + iv.length);
+    // Prepend format header, salt, and IV to the encrypted content.
+    // Format v1: IBTZ\x01 || salt || iv || ciphertext
+    const header = new Uint8Array(FORMAT_HEADER_LENGTH);
+    header.set(FORMAT_MAGIC, 0);
+    header[FORMAT_MAGIC.length] = FORMAT_VERSION;
+
+    const encryptedFile = new Uint8Array(header.length + salt.length + iv.length + encryptedContent.byteLength);
+    encryptedFile.set(header, 0);
+    encryptedFile.set(salt, header.length);
+    encryptedFile.set(iv, header.length + salt.length);
+    encryptedFile.set(new Uint8Array(encryptedContent), header.length + salt.length + iv.length);
 
     return encryptedFile.buffer;
   } catch (error) {
@@ -182,13 +207,24 @@ export async function decryptFile(encryptedBuffer: ArrayBuffer, password: string
     throw new Error("Web Crypto API not available.");
   }
   
-  const totalHeaderLength = SALT_LENGTH + IV_LENGTH;
+  // Detect format version and adjust offsets accordingly
+  // v0 (legacy): salt || iv || ciphertext
+  // v1: IBTZ\x01 || salt || iv || ciphertext
+  const fullData = new Uint8Array(encryptedBuffer);
+  const version = getFormatVersion(fullData);
+  const dataOffset = version >= 1 ? FORMAT_HEADER_LENGTH : 0;
+
+  if (version > FORMAT_VERSION) {
+    throw new Error('This file was encrypted with a newer version of IttyBitz. Please update the app.');
+  }
+
+  const totalHeaderLength = dataOffset + SALT_LENGTH + IV_LENGTH;
   if (encryptedBuffer.byteLength <= totalHeaderLength) {
     throw new Error('Invalid encrypted data format.');
   }
 
-  const salt = new Uint8Array(encryptedBuffer.slice(0, SALT_LENGTH));
-  const iv = new Uint8Array(encryptedBuffer.slice(SALT_LENGTH, totalHeaderLength));
+  const salt = new Uint8Array(encryptedBuffer.slice(dataOffset, dataOffset + SALT_LENGTH));
+  const iv = new Uint8Array(encryptedBuffer.slice(dataOffset + SALT_LENGTH, totalHeaderLength));
   const encryptedContent = new Uint8Array(encryptedBuffer.slice(totalHeaderLength));
 
   let key: CryptoKey | null = null;

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, type ChangeEvent, type DragEvent, memo, useCallback, useEffect } from "react";
-import QRCode from "qrcode.react";
+import QRCode, { QRCodeCanvas } from "qrcode.react";
 import {
   KeyRound,
   Lock,
@@ -361,27 +361,32 @@ export function EncryptorTool() {
     toast({ title: "Key File Generated", description: "Your new key file has been downloaded." });
   }, [toast]);
 
-  const handleDownloadQrCode = useCallback(() => {
-    if (!qrCodeRef.current) return;
-    const originalCanvas = qrCodeRef.current.querySelector('canvas');
-    if (!originalCanvas) return;
-    
-    const PADDING = 20;
-    const newCanvas = document.createElement('canvas');
-    const newCtx = newCanvas.getContext('2d');
-    if (!newCtx) return;
+  // High-res QR download: renders at 900px (≈3" at 300 DPI) with quiet zone padding
+  const hiResQrRef = useRef<HTMLDivElement>(null);
 
-    newCanvas.width = originalCanvas.width + PADDING * 2;
-    newCanvas.height = originalCanvas.height + PADDING * 2;
-    
-    newCtx.fillStyle = '#ffffff';
-    newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
-    newCtx.drawImage(originalCanvas, PADDING, PADDING);
-    
-    const pngUrl = newCanvas
+  const handleDownloadQrCode = useCallback(() => {
+    if (!hiResQrRef.current) return;
+    const hiResCanvas = hiResQrRef.current.querySelector('canvas');
+    if (!hiResCanvas) return;
+
+    // Add a quiet zone (padding) around the QR — 4 modules is standard,
+    // but we use a generous fixed margin for clean printing
+    const PADDING = 60; // ~60px at 900px ≈ a comfortable quiet zone
+    const exportCanvas = document.createElement('canvas');
+    const ctx = exportCanvas.getContext('2d');
+    if (!ctx) return;
+
+    exportCanvas.width = hiResCanvas.width + PADDING * 2;
+    exportCanvas.height = hiResCanvas.height + PADDING * 2;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    ctx.drawImage(hiResCanvas, PADDING, PADDING);
+
+    const pngUrl = exportCanvas
       .toDataURL("image/png")
       .replace("image/png", "image/octet-stream");
-    
+
     const a = document.createElement("a");
     a.href = pngUrl;
     a.download = "encrypted-qr.png";
@@ -389,7 +394,7 @@ export function EncryptorTool() {
     a.click();
     document.body.removeChild(a);
 
-    toast({ title: "QR Code downloaded" });
+    toast({ title: "QR Code downloaded", description: "High-resolution (300 DPI / 1020×1020px)" });
   }, [toast]);
 
   const processData = useCallback(async () => {
@@ -691,10 +696,15 @@ export function EncryptorTool() {
                         <div className="flex flex-col items-center gap-4 py-4" ref={qrCodeRef}>
                            {outputText.length <= QR_MAX_CHARS ? (
                              <>
+                               {/* Preview QR (256px for the dialog) */}
                                <QRCode value={outputText} size={256} />
+                               {/* Hidden high-res QR (900px ≈ 3" at 300 DPI) for download */}
+                               <div ref={hiResQrRef} style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                                 <QRCodeCanvas value={outputText} size={900} />
+                               </div>
                                <Button onClick={handleDownloadQrCode}>
                                 <Download className="mr-2 h-4 w-4" />
-                                Download PNG
+                                Download PNG (300 DPI)
                                </Button>
                              </>
                            ) : (

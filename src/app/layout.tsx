@@ -32,6 +32,19 @@ export default function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js');
                 });
+
+                // Listen for the service worker's update notification
+                navigator.serviceWorker.addEventListener('message', function(event) {
+                  if (event.data && event.data.type === 'SW_UPDATED') {
+                    // Show a non-intrusive update banner
+                    var banner = document.createElement('div');
+                    banner.setAttribute('role', 'alert');
+                    banner.style.cssText = 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;background:#f59e0b;color:#000;padding:0.75rem 1.25rem;border-radius:0.5rem;font-size:0.875rem;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                    banner.textContent = 'A new version of IttyBitz is available — tap to reload';
+                    banner.onclick = function() { window.location.reload(); };
+                    document.body.appendChild(banner);
+                  }
+                });
               }
             `,
           }}

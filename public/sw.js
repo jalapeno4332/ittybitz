@@ -37,6 +37,13 @@ self.addEventListener('activate', (event) => {
   );
   // Take control of all open tabs immediately
   self.clients.claim();
+
+  // Notify all open tabs that a new version is active
+  self.clients.matchAll({ type: 'window' }).then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: 'SW_UPDATED' });
+    });
+  });
 });
 
 // ---- Fetch: cache-first for same-origin, skip cross-origin entirely ----

@@ -443,6 +443,13 @@
       <button class="linkbtn" id="donate-open">Support this project</button>
     </div>
     <div class="grp">
+      <!-- Points at the release asset rather than offering to save the current
+           page. "Save Page As" serialises the live DOM, so it captures whatever
+           is running in the tab at that moment and produces a file that will not
+           match the published checksum. The release asset is the exact built
+           artifact, byte-identical to the page being served, and verifiable. The
+           dismissible banners link here too; this is the permanent home. -->
+      <a class="accent" href="https://github.com/seQRets/ittybitz/releases/latest/download/ittybitz.html" title="Download this app as one file — the exact published build, verifiable by checksum">Download app</a>
       <a class="accent" href="./ittybitz-recovery.html" title="Standalone offline decryption tool">Recovery tool</a>
       <a href="https://github.com/seQRets/ittybitz" target="_blank" rel="noopener noreferrer">GitHub</a>
       <span id="version">v3.0.2 🦕 Iguanodon</span>
